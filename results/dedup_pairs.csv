@@ -1,0 +1,11 @@
+a,sample_a,b,sample_b,rho
+liu2019,Liu_Sample34,immotion_atezo,p61622,0.586284090503647
+immotion_atezo,p03418,immotion_sunitinib,p43066,0.6194788505941234
+immotion_atezo,p25799,immotion_sunitinib,p43066,0.6444398754343289
+immotion_atezo,p78903,immotion_sunitinib,p43066,0.5751247982660209
+immotion_atezo,p25799,braun_nivo,RCC_18_T_SCR,0.5611118981442037
+immotion_atezo,p77642,braun_nivo,EA632174,0.510618808895554
+immotion_sunitinib,p43066,braun_nivo,RCC_18_T_SCR,0.5117323176597434
+braun_nivo,P66291-09A-Run1_S10_L001,braun_evero,P66291-06G-Run1_S29_L002,0.5202314132811103
+braun_nivo,EA632174,braun_evero,P66432-08B-Run1_S23_L002,0.5168198635092991
+braun_nivo,EA595635,braun_evero,P66291-08F-Run1_S7_L001,0.7220944014179529
