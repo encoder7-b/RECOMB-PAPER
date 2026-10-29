@@ -1,0 +1,7 @@
+pattern,case,mean_abs_corr_r_U_given_D
+sparse,omit_related (F1),0.02658276667787136
+sparse,omit_unrelated (F2),0.052308550836618534
+sparse,omit_diffuse (F4),0.05694878402432584
+coherent,omit_related (F1),0.020261739744740267
+coherent,omit_unrelated (F2),0.04805023620065272
+coherent,omit_diffuse (F4),0.1155033046371209

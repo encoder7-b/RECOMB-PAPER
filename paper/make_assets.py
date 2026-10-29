@@ -241,9 +241,86 @@ def numbers(teff):
     return mac
 
 
+def tables_v2():
+    """Tables added in revision: exactness, null calibration, factor misspecification, exploratory."""
+    e = pd.read_csv(f"{RES}/exactness_summary.csv")
+    L = [r"\begin{tabular}{rrccc}", r"\toprule", r"$n$ & $g$ & reject @0.05 & reject @0.01 & KS $p$ \\", r"\midrule"]
+    for _, r in e.iterrows():
+        L.append(f"{int(r.n)} & {int(r.g)} & {r.rej05:.4f} $\\pm$ {r.ci05:.4f} & {r.rej01:.4f} $\\pm$ {r.ci01:.4f} & {r.ks_p:.2f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}"]
+    open(f"{TAB}/tab_exactness.tex", "w").write("\n".join(L) + "\n")
+
+    L = [r"\begin{tabular}{rcccc}", r"\toprule",
+         r"$n$ & $k$ & FDR, $r{=}1$ & FDR, $r{=}2$ & feasible tests: reject @0.05 \\", r"\midrule"]
+    fc = json.load(open(f"{RES}/feasible_calib.json")) if os.path.exists(f"{RES}/feasible_calib.json") else {}
+    for n, k in [(25, 2), (50, 2), (100, 4), (300, 8)]:
+        d = pd.read_csv(f"{RES}/g1_null2000_n{n}.csv")
+        d = d[(d.level == "module_mean")]
+        ci = lambda x: f"{x.mean():.3f} [{max(0, x.mean() - 1.96 * x.std() / np.sqrt(len(x))):.3f}, {x.mean() + 1.96 * x.std() / np.sqrt(len(x)):.3f}]"  # noqa: E731
+        f1 = ci(d[(d.comb == "stouffer") & (d.r == 1)].fdp)
+        f2 = ci(d[(d.comb == "stouffer") & (d.r == 2)].fdp)
+        if str(n) in fc:
+            pr = f"{fc[str(n)]['rate05']:.4f} ({100 * fc[str(n)]['feasible']:.0f}\\% feasible)"
+        else:
+            pr = f"{d[d.r == 0].fdp.mean():.4f}"
+        L.append(f"{n} & {k} & {f1} & {f2} & {pr} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}"]
+    open(f"{TAB}/tab_null2000.tex", "w").write("\n".join(L) + "\n")
+
+    g = pd.read_csv(f"{RES}/g3_factor_misspec_summary.csv")
+    cc = pd.read_csv(f"{RES}/g3_corr_check.csv")
+    corr = lambda tag: "/".join(f"{v:.3f}" for v in cc[cc.case.str.contains(tag)].sort_values("pattern", ascending=False)  # noqa: E731
+                                .mean_abs_corr_r_U_given_D)
+    cases = [("oracle", "true span"), ("contained", "true span + 4 random"),
+             ("omit_related", f"omit $F_1$ (immune), $|\\rho|$={corr('F1')}"),
+             ("omit_unrelated", f"omit $F_2$, $|\\rho|$={corr('F2')}"),
+             ("omit_diffuse", f"omit $F_4$ (diffuse), $|\\rho|$={corr('F4')}")]
+    L = [r"\begin{tabular}{lcccccc}", r"\toprule",
+         r" & \multicolumn{3}{c}{sparse signal} & \multicolumn{3}{c}{coherent signal} \\",
+         r"Factor span & $n{=}50$ & $n{=}100$ & $n{=}300$ & $n{=}50$ & $n{=}100$ & $n{=}300$ \\", r"\midrule"]
+    for c, name in cases:
+        v = []
+        for pat in ("sparse", "coherent"):
+            for n in (50, 100, 300):
+                q = g[(g.pattern == pat) & (g.case == c) & (g.n == n)].iloc[0]
+                v.append(f"{q.fdr:.3f}")
+        L.append(name + " & " + " & ".join(v) + r" \\")
+    L += [r"\bottomrule", r"\end{tabular}"]
+    open(f"{TAB}/tab_factor_misspec.tex", "w").write("\n".join(L) + "\n")
+
+    a = pd.read_csv(f"{RES}/exploratory_incremental_auc.csv")
+    nm = {"imvigor210": "IMvigor210 (sealed)", "braun_nivo": "Braun nivolumab (sealed)",
+          "immotion_sunitinib": "IMmotion150 sunitinib (control)", "braun_evero": "Braun everolimus (control)"}
+    L = [r"\begin{tabular}{lcc}", r"\toprule", r"Test cohort & T-effector only & + elastic net (1500 genes) \\", r"\midrule"]
+    for c in nm:
+        q = a[a.cohort == c].set_index("model")
+        f = lambda m: f"{q.loc[m].auc:.2f} [{q.loc[m].lo:.2f}, {q.loc[m].hi:.2f}]"  # noqa: E731
+        L.append(f"{nm[c]} & {f('A_teff')} & {f('C_teff+enet1500')} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}"]
+    open(f"{TAB}/tab_exploratory.tex", "w").write("\n".join(L) + "\n")
+
+
+def numbers_v2():
+    p = json.load(open(f"{RES}/perm_null_summary.json"))
+    x = json.load(open(f"{RES}/exploratory_incremental_summary.json"))
+    ag = pd.read_csv(f"{RES}/exactness_agreement.csv")
+    mac = {"permN": str(p["n_perm"]), "permRate": f"{p['per_test_rate_0.05']:.3f}",
+           "permBH": f"{p['fwer_bh_r1']:.3f}", "permBY": f"{p['fwer_by_r1']:.3f}",
+           "permBHtwo": f"{p['fwer_bh_r2']:.3f}", "permMinQ": f"{p['real_min_p_r1_quantile']:.2f}",
+           "enetGenes": str(x["n_nonzero_enet_genes"]),
+           "modDeltaMax": f"{max(v['max'] for v in x['module_delta_auc'].values()):.3f}",
+           "agreeMax": f"{ag.max_abs_log_p_diff.max():.0e}"}
+    with open(f"{HERE}/numbers.tex", "a") as fh:
+        for k, v in mac.items():
+            fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")
+    return mac
+
+
 if __name__ == "__main__":
     teff = teff_auc()
     teff.to_csv(f"{RES}/real_teff_auc_exploratory.csv", index=False)
     fig_baselines(); fig_adversarial(); fig_power(); fig_real(teff)
     tables(teff)
     print(json.dumps(numbers(teff), indent=1))
+    tables_v2()
+    print(json.dumps(numbers_v2(), indent=1))

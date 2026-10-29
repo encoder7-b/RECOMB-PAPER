@@ -124,6 +124,11 @@ def pc_stouffer(zmat, r):
     return np.minimum(1.0, 2 * np.minimum(*out))
 
 
+def by(p, alpha):
+    """Benjamini-Yekutieli: BH at alpha / H_m, valid under arbitrary dependence."""
+    return bh(p, alpha / np.sum(1.0 / np.arange(1, len(p) + 1)))
+
+
 def bh(p, alpha):
     m = len(p)
     order = np.argsort(p)

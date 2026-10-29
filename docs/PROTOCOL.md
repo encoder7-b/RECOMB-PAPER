@@ -67,3 +67,7 @@ e22070b34b1f7df4e0d222a0728c13d8b9d62ad9cf8ddd1993f057a31f824dad  riaz_labels.cs
 Any change after the commit gets logged here with a date and reason, and is reported in the paper.
 
 - **2026-10-29, exploratory (not a protocol change):** after unsealing, the per-cohort AUC of the marker-set mean (T-effector score) was computed as a label and pipeline sanity check. It is reported as exploratory.
+- **2026-10-29, exploratory (not a protocol change):** a real-data permutation null was run: response permuted within batch strata of each discovery cohort, 1000 times (`analysis/perm_null.py`). It is a calibration check and makes no inference on the labels.
+- **2026-10-29, exploratory (not a protocol change):** held-out incremental prediction was run (`analysis/exploratory_incremental.py`): T-effector score alone, plus each module, and plus an elastic net over 1500 genes. Models were trained on the discovery cohorts and scored on the sealed cohorts and controls.
+- **2026-10-29, sensitivity analysis:** BY (arbitrary dependence) is reported alongside the pre-registered BH. The primary analysis is unchanged.
+
