@@ -106,7 +106,35 @@ A knockoff procedure for cohorts of 25–300 patients that is exact under a Gaus
   - FDR with signal 0.05–0.11. Global null 0.09–0.12 at 100 reps.
   - Power matches N_ext = 2000: 0.97 at n = 300 (coherent, AUC 0.8).
 
-**Simulation evidence complete for G0′, G1 and G2.** Next: commit `docs/PROTOCOL.md`, then unseal.
+**Simulation evidence complete for G0′, G1 and G2.**
+
+### Unsealed result (2026-10-29), protocol commit 3c3ef40; all 12 label hashes verified
+
+- **Discoveries: 0** under every analysis:
+  - our method at r = 1, r = 2 and with Simes
+  - the marginal baseline
+  - the pooled label-aware baseline
+- **Strongest module:** metallothioneins (MT1G/A/H/M/E), partial-conjunction p = 0.010, while BH needs ≤ 0.0026. It was positive in 6 of 8 discovery cohorts, but negative in both sealed cohorts.
+- **Discovery p-values are consistent with uniform:** 2 of 39 are below 0.05, and KS against uniform gives p = 0.13.
+- **Sealed "replication":** 5 of 39 by discovery direction, against about 3.8 expected by chance.
+- **Exploratory sanity check** (marker-set AUC):
+
+  | Cohort | AUC | p |
+  |---|---|---|
+  | Gide, PD-1 | 0.84 | 0.0002 |
+  | Gide, ipilimumab + PD-1 | 0.82 | 0.003 |
+  | Jung | 0.76 | 0.04 |
+  | IMmotion150 atezolizumab | 0.66 | 0.001 |
+  | IMvigor210 | 0.59 | 0.02 |
+  | Braun nivolumab | 0.49 | NS |
+  | Hugo | 0.48 | NS |
+  | Liu | 0.53 | NS |
+  | Sunitinib (control) | 0.51 | NS |
+  | Everolimus (control) | 0.60 | NS |
+
+  The labels and pipeline behave as the literature predicts: the score is predictive in several ICI cohorts, null in the non-ICI controls, and null in Braun and Hugo, as those papers reported.
+- **Interpretation:** at these sample sizes, no TCGA-derived module carries response information beyond the T-effector/IFN-γ score, conditionally on the other modules. This is consistent with the dominance of T-cell inflammation in ICI response.
+- **Implication for the paper:** the real-data section is a pre-registered, well-controlled null. The paper's contribution rests on the method, the simulations (exact validity, robustness through over-factoring, leakage of label-aware correction, FDR inflation of marginal methods) and the honest null. Any further real-data analysis is exploratory and must be labelled so.
 
 **Real data**
 

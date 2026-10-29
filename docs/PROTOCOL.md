@@ -65,3 +65,5 @@ e22070b34b1f7df4e0d222a0728c13d8b9d62ad9cf8ddd1993f057a31f824dad  riaz_labels.cs
 ## 6. Deviations
 
 Any change after the commit gets logged here with a date and reason, and is reported in the paper.
+
+- **2026-10-29, exploratory (not a protocol change):** after unsealing, the per-cohort AUC of the marker-set mean (T-effector score) was computed as a label and pipeline sanity check. It is reported as exploratory.

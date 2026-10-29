@@ -1,0 +1,34 @@
+{
+ "mode": "real",
+ "n_modules": 39,
+ "discovered_r1": 0,
+ "discovered_r2": 0,
+ "discovered_r1_simes": 0,
+ "replication_rate_r1": null,
+ "random_set_rate_mean": null,
+ "random_set_p": null,
+ "baseline_marginal": {
+  "discovered": 0,
+  "rep_own_stat": null,
+  "rep_conditional_stat": null
+ },
+ "baseline_pooled_labelaware": {
+  "discovered": 0,
+  "rep_own_stat": null,
+  "rep_conditional_stat": null
+ },
+ "feasible_frac": {
+  "hugo": 0.8205128205128205,
+  "riaz": 1.0,
+  "gide_pd1": 1.0,
+  "gide_combo": 0.9743589743589743,
+  "liu2019": 1.0,
+  "jung": 0.9743589743589743,
+  "gse176307": 1.0,
+  "immotion_atezo": 1.0,
+  "imvigor210": 1.0,
+  "braun_nivo": 1.0,
+  "immotion_sunitinib": 1.0,
+  "braun_evero": 1.0
+ }
+}
