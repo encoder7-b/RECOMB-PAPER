@@ -253,16 +253,27 @@ def tables_v2():
     L = [r"\begin{tabular}{rcccc}", r"\toprule",
          r"$n$ & $k$ & FDR, $r{=}1$ & FDR, $r{=}2$ & feasible tests: reject @0.05 \\", r"\midrule"]
     fc = json.load(open(f"{RES}/feasible_calib.json")) if os.path.exists(f"{RES}/feasible_calib.json") else {}
+    ci_path = f"{RES}/g1_null2000_ci.csv"
+    if os.path.exists(f"{RES}/g1_null2000_n25.csv"):  # raw replicate files present: (re)compute intervals
+        rows = []
+        for n in (25, 50, 100, 300):
+            d = pd.read_csv(f"{RES}/g1_null2000_n{n}.csv")
+            d = d[d.level == "module_mean"]
+            for r in (1, 2):
+                x = d[(d.comb == "stouffer") & (d.r == r)].fdp
+                rows.append(dict(n=n, r=r, mean=x.mean(), se=x.std() / np.sqrt(len(x)), reps=len(x)))
+            rows.append(dict(n=n, r=0, mean=d[d.r == 0].fdp.mean(), se=np.nan, reps=int((d.r == 0).sum())))
+        pd.DataFrame(rows).to_csv(ci_path, index=False)
+    cis = pd.read_csv(ci_path)
     for n, k in [(25, 2), (50, 2), (100, 4), (300, 8)]:
-        d = pd.read_csv(f"{RES}/g1_null2000_n{n}.csv")
-        d = d[(d.level == "module_mean")]
-        ci = lambda x: f"{x.mean():.3f} [{max(0, x.mean() - 1.96 * x.std() / np.sqrt(len(x))):.3f}, {x.mean() + 1.96 * x.std() / np.sqrt(len(x)):.3f}]"  # noqa: E731
-        f1 = ci(d[(d.comb == "stouffer") & (d.r == 1)].fdp)
-        f2 = ci(d[(d.comb == "stouffer") & (d.r == 2)].fdp)
+        def ci(r):
+            q = cis[(cis.n == n) & (cis.r == r)].iloc[0]
+            return f"{q['mean']:.3f} [{max(0, q['mean'] - 1.96 * q.se):.3f}, {q['mean'] + 1.96 * q.se:.3f}]"
+        f1, f2 = ci(1), ci(2)
         if str(n) in fc:
             pr = f"{fc[str(n)]['rate05']:.4f} ({100 * fc[str(n)]['feasible']:.0f}\\% feasible)"
         else:
-            pr = f"{d[d.r == 0].fdp.mean():.4f}"
+            pr = f"{cis[(cis.n == n) & (cis.r == 0)]['mean'].iloc[0]:.4f}"
         L.append(f"{n} & {k} & {f1} & {f2} & {pr} \\\\")
     L += [r"\bottomrule", r"\end{tabular}"]
     open(f"{TAB}/tab_null2000.tex", "w").write("\n".join(L) + "\n")
