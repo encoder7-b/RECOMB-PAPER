@@ -114,7 +114,7 @@ A knockoff procedure for cohorts of 25–300 patients that is exact under a Gaus
   - our method at r = 1, r = 2 and with Simes
   - the marginal baseline
   - the pooled label-aware baseline
-- **Strongest module:** metallothioneins (MT1G/A/H/M/E), partial-conjunction p = 0.010, while BH needs ≤ 0.0026. It was positive in 6 of 8 discovery cohorts, but negative in both sealed cohorts.
+- **Strongest module:** metallothioneins (MT1G/A/H/M/E), partial-conjunction p = 0.010, while BH needs ≤ 0.0026. It was positive in 7 of 8 discovery cohorts, but negative in both sealed cohorts.
 - **Discovery p-values are consistent with uniform:** 2 of 39 are below 0.05, and KS against uniform gives p = 0.13.
 - **Sealed "replication":** 5 of 39 by discovery direction, against about 3.8 expected by chance.
 - **Exploratory sanity check** (marker-set AUC):
