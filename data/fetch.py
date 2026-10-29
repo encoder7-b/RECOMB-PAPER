@@ -28,11 +28,14 @@ EXTERNAL = {  # TCGA reference expression (log2(RSEM+1)), matched tumor types
     for t in ("SKCM", "STAD", "LUAD", "LUSC", "BLCA", "KIRC")
 }
 
+DIRECT = {  # supplementary files fetched by URL
+    "braun2020": ["https://static-content.springer.com/esm/art%3A10.1038%2Fs41591-020-0839-y/"
+                  "MediaObjects/41591_2020_839_MOESM2_ESM.xlsx"],
+}
+
 MANUAL = {
-    "gide2019": "ENA PRJEB23709: raw FASTQ only; needs processed matrix from a compendium or alignment.",
-    "kim2018": "ENA PRJEB25780: raw FASTQ only; same as above.",
-    "imvigor210": "IMvigor210CoreBiologies R package (research-pub.gene.com); needs R to export.",
-    "braun2020": "Nature Medicine 2020 supplementary tables (expression + clinical, xlsx).",
+    "kim2018": "ENA PRJEB25780: raw FASTQ only (not used).",
+    "gide/liu/imvigor210/immotion150": "fetched from cBioPortal iAtlas by data/fetch_cbio.py",
 }
 
 
@@ -68,6 +71,7 @@ def plan():
         out[name] = list_geo(gse, pat)
     for name, url in EXTERNAL.items():
         out[name] = [url]
+    out.update(DIRECT)
     return out
 
 

@@ -120,9 +120,20 @@ def iatlas(study, select=None, batch=None):
     return collapse_symbols(np.log2(expr.fillna(0) + 1)), lab
 
 
+def braun_extract():
+    """Convert the Braun 2020 supplementary workbook (S1 clinical, S4A RNA) to CSV once."""
+    d = f"{RAW}/braun2020"
+    if os.path.exists(f"{d}/clinical.csv") and os.path.exists(f"{d}/rna_expression.csv.gz"):
+        return
+    xl = f"{d}/41591_2020_839_MOESM2_ESM.xlsx"
+    pd.read_excel(xl, sheet_name="S1_Clinical_and_Immune_Data", header=1).to_csv(f"{d}/clinical.csv", index=False)
+    pd.read_excel(xl, sheet_name="S4A_RNA_Expression", header=1, index_col=0).to_csv(f"{d}/rna_expression.csv.gz")
+
+
 def braun(arm):
     """Braun 2020 (CheckMate 009/010/025). Expression as released by the authors (already
     normalized, log-scale); batch = trial. ORR: CR/PR/CRPR = 1, SD/PD = 0, NE excluded."""
+    braun_extract()
     c = pd.read_csv(f"{RAW}/braun2020/clinical.csv", dtype=str)
     c = c[(c["Arm"] == arm) & (c["RNA_ID"].fillna("NA") != "NA")]
     expr = pd.read_csv(f"{RAW}/braun2020/rna_expression.csv.gz", index_col=0)

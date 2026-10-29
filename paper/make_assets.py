@@ -300,6 +300,19 @@ def tables_v2():
     open(f"{TAB}/tab_exploratory.tex", "w").write("\n".join(L) + "\n")
 
 
+def table_shared():
+    d = pd.read_csv(f"{RES}/g4_shared_patients_summary.csv")
+    L = [r"\begin{tabular}{lcccc}", r"\toprule",
+         r"Shared patients & FDR, null & FDR, signal & Power, signal & FDR, null, $r{=}2$ \\", r"\midrule"]
+    for f in sorted(d.frac.unique()):
+        q = lambda auc, r, col: d[(d.frac == f) & (d.auc == auc) & (d.r == r)][col].iloc[0]  # noqa: E731
+        se = lambda auc, r: d[(d.frac == f) & (d.auc == auc) & (d.r == r)].fdr_se.iloc[0]  # noqa: E731
+        L.append(f"{100 * f:.0f}\\% & {q(0.0, 1, 'fdr'):.3f} ({se(0.0, 1):.3f}) & {q(0.8, 1, 'fdr'):.3f} ({se(0.8, 1):.3f})"
+                 f" & {q(0.8, 1, 'power'):.2f} & {q(0.0, 2, 'fdr'):.3f} \\\\")
+    L += [r"\bottomrule", r"\end{tabular}"]
+    open(f"{TAB}/tab_shared.tex", "w").write("\n".join(L) + "\n")
+
+
 def numbers_v2():
     p = json.load(open(f"{RES}/perm_null_summary.json"))
     x = json.load(open(f"{RES}/exploratory_incremental_summary.json"))
@@ -310,6 +323,9 @@ def numbers_v2():
            "enetGenes": str(x["n_nonzero_enet_genes"]),
            "modDeltaMax": f"{max(v['max'] for v in x['module_delta_auc'].values()):.3f}",
            "agreeMax": f"{ag.max_abs_log_p_diff.max():.0e}"}
+    sf = json.load(open(f"{RES}/sensitivity_feasible.json"))
+    mac.update({"nUntested": str(sf["n_untested_cells"]), "nCells": str(sf["n_cells"]),
+                "sensMinP": f"{sf['r1']['drop_untested']['min_p']:.4f}"})
     with open(f"{HERE}/numbers.tex", "a") as fh:
         for k, v in mac.items():
             fh.write(f"\\newcommand{{\\{k}}}{{{v}}}\n")
@@ -317,10 +333,14 @@ def numbers_v2():
 
 
 if __name__ == "__main__":
-    teff = teff_auc()
-    teff.to_csv(f"{RES}/real_teff_auc_exploratory.csv", index=False)
+    if os.path.exists(os.path.join(ROOT, "data", "processed", "hugo_labels.csv")):
+        teff = teff_auc()
+        teff.to_csv(f"{RES}/real_teff_auc_exploratory.csv", index=False)
+    else:  # clean clone without the (public, not redistributed) cohort data: use the tracked table
+        teff = pd.read_csv(f"{RES}/real_teff_auc_exploratory.csv")
     fig_baselines(); fig_adversarial(); fig_power(); fig_real(teff)
     tables(teff)
     print(json.dumps(numbers(teff), indent=1))
     tables_v2()
+    table_shared()
     print(json.dumps(numbers_v2(), indent=1))

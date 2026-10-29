@@ -124,6 +124,21 @@ def pc_stouffer(zmat, r):
     return np.minimum(1.0, 2 * np.minimum(*out))
 
 
+def pc_stouffer_feasible(zmat, r):
+    """As pc_stouffer, but cohorts where the module was not testable (NaN) are DROPPED:
+    K_G = number of tested cohorts, m = K_G - r + 1, p = 1 if K_G < r.
+
+    Testability depends only on expression (design rank, gene variance), never on Y, so
+    conditioning on it leaves each tested cohort's z exactly N(0,1) under its null and
+    Lemma 1 applies with K replaced by K_G. (pc_stouffer instead sets untested z to 0.)"""
+    out = np.ones(zmat.shape[0])
+    for i, row in enumerate(zmat):
+        z = row[np.isfinite(row)]
+        if len(z) >= r:
+            out[i] = pc_stouffer(z[None, :], r)[0]
+    return out
+
+
 def by(p, alpha):
     """Benjamini-Yekutieli: BH at alpha / H_m, valid under arbitrary dependence."""
     return bh(p, alpha / np.sum(1.0 / np.arange(1, len(p) + 1)))

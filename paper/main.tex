@@ -29,7 +29,7 @@
 \begin{@twocolumnfalse}
 \maketitle
 \begin{abstract}
-\noindent Public immune-checkpoint-inhibitor (ICI) cohorts provide tumour transcriptomes for only 25--300 patients each. That is too few to estimate the gene--gene dependence that conditional inference requires, and response is often confounded with batch structure. Consequently, transcriptomic predictors of response rarely replicate. We present a framework that learns dependence structure (a sparse gene graph and latent-factor directions) once from large unlabelled external data, and eliminates all cohort-specific parameters by conditioning rather than estimation. The resulting gene-module test is exact in finite samples for any outcome distribution whenever the external structure contains the cohort's true structure. Evidence is combined across cohorts by a direction-consistent partial-conjunction procedure with false discovery rate (FDR) control. We show that misspecified structure induces an omitted-variable bias whose effect on FDR grows with sample size, and that over-spanning the external factor space removes it when the error lies in the factor span. In simulations the test is calibrated in every setting and costs little power relative to an oracle, whereas marginal module tests and label-aware batch correction inflate FDR up to 2.8- and 4.5-fold. Under adversarial factor-span misspecification, over-spanning restores FDR to \advNewNoDropLo--\advNewNoDropHi. In a pre-registered, hash-sealed analysis of \nICI\ patients across ten ICI cohorts, no tested module carried detectable response information beyond the established T-effector/IFN-$\gamma$ signature, and discovery $p$-values were consistent with the global null. These results provide a leakage-free procedure for conditional biomarker discovery in small cohorts.
+\noindent Public immune-checkpoint-inhibitor (ICI) cohorts provide tumour transcriptomes for only 25--300 patients each. That is too few to estimate the gene--gene dependence that conditional inference requires, and response is often confounded with batch structure. Consequently, transcriptomic predictors of response rarely replicate. We present a framework that learns dependence structure (a sparse gene graph and latent-factor directions) once from large unlabelled external data, and eliminates all cohort-specific parameters by conditioning rather than estimation. The resulting gene-module test is exact in finite samples for any outcome distribution whenever the external structure contains the cohort's true structure. Evidence is combined across cohorts by a direction-consistent partial-conjunction procedure with false discovery rate (FDR) control. We show that misspecified structure induces an omitted-variable bias whose effect on FDR grows with sample size, and that over-spanning the external factor space removes it when the error lies in the factor span, though not when response-related dependence is missing from the graph. In simulations the test is calibrated in every setting and costs little power relative to an oracle, whereas marginal module tests and label-aware batch correction inflate FDR up to 2.8- and 4.5-fold. Under adversarial factor-span misspecification, over-spanning restores FDR to \advNewNoDropLo--\advNewNoDropHi. In a pre-registered, hash-sealed analysis of \nICI\ patients across ten ICI cohorts, no tested module carried detectable response information beyond the established T-effector/IFN-$\gamma$ signature, and discovery $p$-values were consistent with the global null. These results provide a leakage-free procedure for conditional biomarker discovery in small cohorts.
 
 \medskip\noindent\textbf{Keywords:} conditional independence testing; false discovery rate control; immune checkpoint inhibitors; transcriptomic biomarkers; replicability; partial conjunction testing; external data integration; Gaussian graphical models; batch effects; pre-registration.
 
@@ -50,7 +50,7 @@ Many studies have proposed transcriptomic predictors of response to immune check
 
 We ask a sharper question than ``is module $G$ associated with response?'' We ask whether $G$ carries information \emph{beyond all other measured genes}, including the established T-effector/IFN-$\gamma$ signature \citep{ayers2017ifng}, and whether that holds in more than one cohort.
 
-\paragraph{Related work.} Table~\ref{tab:related} compares the closest methods. Model-X knockoffs and the conditional randomisation test (CRT) control error for conditional associations given the feature distribution \citep{candes2018panning}. The multi-environment knockoff filter adds cross-environment consistency \citep{li2022multienv}. Conditional knockoffs condition on sufficient statistics to avoid estimating parameters \citep{huang2020relaxing}, and summary-statistic knockoffs borrow dependence from reference panels \citep{he2022ghostknockoff}. A recent CRT variant uses external and unlabelled data to estimate the conditional distribution by transfer learning and a residual bootstrap \citep{crtstar2026}. Our method differs in what it takes from external data (\emph{structure only}: a graph support and a factor span). It also differs in how it handles everything else (exact elimination by conditioning, in closed form), and in its unit and target (gene modules, replicated across independent small cohorts with batch).
+\paragraph{Related work.} Table~\ref{tab:related} compares the closest methods. Model-X knockoffs and the conditional randomisation test (CRT) control error for conditional associations given the feature distribution \citep{candes2018panning}. The multi-environment knockoff filter adds cross-environment consistency \citep{li2022multienv}. Conditional knockoffs condition on sufficient statistics to avoid estimating parameters \citep{huang2020relaxing}, and summary-statistic knockoffs borrow dependence from reference panels \citep{he2022ghostknockoff}. A recent CRT variant uses external and unlabelled data to estimate the conditional distribution by transfer learning and a residual bootstrap \citep{crtstar2026}. Our method differs in what it takes from external data (\emph{structure only}: a graph support and a factor span). It also differs in how it handles everything else (exact elimination by conditioning, in closed form), and in its unit and target (gene modules, replicated across independent small cohorts with batch). Table~\ref{tab:related} compares assumptions and guarantees, not performance. The only empirical comparison with a knockoff-based multi-environment pipeline is in its oracle form (our first design, below), and we did not run CRT*.
 
 \begin{table*}[t]
 \centering\footnotesize
@@ -76,7 +76,7 @@ CRT* \citep{crtstar2026} & $X\mid Z$ estimated (transfer learning) & estimates t
 \begin{enumerate}
   \item An exact conditional test for a gene set. External data supply only a graph support and a factor span, and every cohort-specific parameter is eliminated by conditioning (Proposition~\ref{prop:exact}, full proof in Appendix~\ref{app:proofs}).
   \item A direction-consistent Stouffer partial-conjunction combiner, with multiplicity control across modules (BH, and BY under arbitrary dependence).
-  \item An omitted-variable characterisation of misspecification: inflation grows like $\sqrt n$ and is driven by the residual correlation between the omitted direction and the outcome residual (Proposition~\ref{prop:bias}). Simulations confirm this, and show which errors over-spanning repairs and which it cannot.
+  \item An omitted-variable characterisation of misspecification: inflation grows like $\sqrt n$ and is driven by the residual correlation between the omitted direction and the outcome residual (Proposition~\ref{prop:bias}). Simulations confirm this. Over-spanning repairs factor-span errors, but it cannot repair omitted response-related graph edges, which inflate FDR up to \advNewDropHi.
   \item Evidence that label-aware batch correction and marginal module tests do not control FDR for this estimand.
   \item A pre-registered, hash-sealed analysis of \nICI\ patients, with a sealed replication audit, a real-data permutation null and exploratory checks.
 \end{enumerate}
@@ -132,7 +132,7 @@ The proof is in Appendix~\ref{app:proofs}. Its three steps:
 \end{enumerate}
 Gene scales are fixed from external data, so the per-cohort design never uses cohort statistics of $X_G$.
 
-\paragraph{Verification.} Our implementation agrees with independent implementations (statsmodels OLS for $g=1$, and multivariate OLS/MANOVA Wilks for $g=5$) to within \agreeMax\ in $|\log p|$. Under the conditional null, with a binary $Y$ that depends nonlinearly on genes outside $D_G$ and $20{,}000$ replicates per setting, rejection rates match nominal levels for $n$ from 15 to 100 and $g$ from 1 to 10 (Table~\ref{tab:exact}).
+\paragraph{Verification.} Our implementation agrees with independent implementations (statsmodels OLS for $g=1$, and multivariate OLS/MANOVA Wilks for $g=5$) to within \agreeMax\ in $|\log p|$. A numerical audit of Lemma~A1 over 200 random sparse-plus-factor models confirms that the true conditional-mean coefficients lie in the span of the true neighbours and $\Omega\Lambda$, and in any span containing $\Omega\Lambda$, to within $10^{-13}$. Dropping a single neighbour or factor direction breaks this. Under the conditional null, with a binary $Y$ that depends nonlinearly on genes outside $D_G$ and $20{,}000$ replicates per setting, rejection rates match nominal levels for $n$ from 15 to 100 and $g$ from 1 to 10 (Table~\ref{tab:exact}).
 
 \begin{table}[t]
 \centering\footnotesize
@@ -159,7 +159,7 @@ Over-spanning makes containment of the factor span more likely, but it does not 
 \subsection{Combining cohorts and modules}
 
 \begin{lemma}[Partial conjunction]\label{lem:pc}
-Suppose the cohorts are independent given the external structure, and let $H^{r/K}_G$ state that $G$ is non-null in fewer than $r$ of the $K$ cohorts. For each sign $s\in\{\pm1\}$, let $p^{(s)}_{(1)}\le\dots\le p^{(s)}_{(K)}$ be the ordered exact one-sided $p$-values $1-\Phi(sz_k)$, and let $m=K-r+1$. Then
+Suppose the cohorts are independent given the external structure, and let $H^{r/K}_G$ state that $G$ is non-null in fewer than $r$ of the $K$ cohorts in which $G$ is tested. For each sign $s\in\{\pm1\}$, let $p^{(s)}_{(1)}\le\dots\le p^{(s)}_{(K)}$ be the ordered exact one-sided $p$-values $1-\Phi(sz_k)$, and let $m=K-r+1$. Then
 \[
 P^{r/K}_G=\min\Bigl\{1,\,2\min_s\bar\Phi\Bigl(\textstyle\sum_{i\ge r}\Phi^{-1}\bigl(1-p^{(s)}_{(i)}\bigr)/\sqrt m\Bigr)\Bigr\}
 \]
@@ -169,6 +169,8 @@ satisfies $\Pr(P^{r/K}_G\le t)\le t$ under $H^{r/K}_G$.
 The idea is that at least $m$ cohorts are null and each $z_k$ is exactly $N(0,1)$ there. The $m$ largest $p$-values dominate a sorted set of $m$ independent uniforms, and the Stouffer combination is monotone (Appendix~\ref{app:proofs}; \citealp{benjamini2008pc}).
 
 Across modules we apply BH \citep{benjamini1995}. BH is guaranteed only when the null $p$-values are positively dependent (PRDS), which we cannot prove here, because modules share the residual $r$ and overlap in their designs. We therefore also report Benjamini--Yekutieli (BY), which is valid under arbitrary dependence. Cohort independence is a correctness requirement, which we enforce with a calibrated duplicate-patient screen (Section~\ref{sec:data}).
+
+\paragraph{Untested cohorts.} A module may be untestable in a cohort because too few degrees of freedom remain. Testability depends only on expression, never on $Y$. So dropping that cohort from the module's combination (using the $K$ cohorts in which it is tested) keeps Lemma~\ref{lem:pc} valid by conditioning. The pre-registered rule instead set its $z$ to 0, a fixed $p=1/2$ that the lemma does not cover. We report both rules, and they agree (Section~\ref{sec:data}).
 
 \subsection{Misspecification}
 
@@ -180,6 +182,13 @@ Suppose $E[X_G\mid X_{-G},b]=D_G\beta+U\gamma$, where $U=X_{-G}c\notin\operatorn
 \end{proposition}
 
 The bias is non-zero only when the omitted direction is correlated with the outcome \emph{residual} $r$. Being correlated with response is not enough. When it is correlated with $r$, the type-I error tends to 1 as $n$ grows. The derivation is in Appendix~\ref{app:proofs}.
+
+\paragraph{Scope of the guarantee.} Proposition~\ref{prop:exact} is exact only under Assumptions~\ref{as:iid}--\ref{as:contain}, and outside them we claim no guarantee.
+\begin{itemize}
+  \item An omitted direction correlated with $r$ drives the type-I error to 1 (Proposition~\ref{prop:bias}). In adversarial simulations, missing response-related edges inflate FDR up to \advNewDropHi.
+  \item Over-spanning repairs factor-span errors only.
+  \item Patients shared between cohorts violate Lemma~\ref{lem:pc} (Section~\ref{sec:sims}).
+\end{itemize}
 
 \subsection{Pre-registration}
 
@@ -269,6 +278,21 @@ Correlation with response is therefore not what matters. Correlation with the re
   \item Distilling the outcome residual with a lasso \citep{liu2022dcrt} did not help.
 \end{itemize}
 
+\paragraph{Dependent cohorts (shared patients).} Lemma~\ref{lem:pc} assumes independent cohorts. To see what happens when that fails, we made each pair of adjacent cohorts share a fraction of patients (identical $X$ and $Y$, no batch mismatch, oracle structure, 500 replicates; Table~\ref{tab:shared}).
+\begin{itemize}
+  \item Sharing 10\% of patients roughly doubled FDR under the global null at $r=1$.
+  \item The overlap correlates adjacent $z$-scores only modestly, but BH's first rejection lies far in the tail, where a slightly wider null distribution matters a great deal.
+  \item Replication at $r=2$ is more robust.
+\end{itemize}
+This is why the duplicate screen is part of the method.
+
+\begin{table}[t]
+\centering\footnotesize
+\caption{FDR (Monte Carlo SE) with patients shared between adjacent cohorts ($K=6$, $n=100$, oracle structure, coherent signal at AUC 0.8, 500 replicates). $r=1$ unless stated.}
+\label{tab:shared}
+\resizebox{\columnwidth}{!}{\input{tables/tab_shared}}
+\end{table}
+
 \begin{figure*}[t]
 \centering\includegraphics[width=0.78\textwidth]{figs/fig_adversarial.pdf}
 \caption{FDR under adversarial missing edges (AUC 0.8). Orange: default span. Blue: over-spanned. Solid $n=300$, dashed $n=100$.}
@@ -295,7 +319,7 @@ Correlation with response is therefore not what matters. Correlation with the re
 \resizebox{\columnwidth}{!}{\input{tables/tab_cohorts}}
 \end{table}
 
-\paragraph{Pre-registered result.} There were \nDiscovered\ discoveries at $r=1$ and $r=2$, with BH, BY and Simes. The marginal and pooled baselines also made none.
+\paragraph{Pre-registered result.} There were \nDiscovered\ discoveries at $r=1$ and $r=2$, with BH, BY and Simes. The marginal and pooled baselines also made none. Dropping untested cohorts instead of setting $z=0$ (\nUntested\ of \nCells\ module--cohort cells were untested) also gave 0 discoveries, with minimum $P=\sensMinP$.
 \begin{itemize}
   \item The strongest module, the metallothioneins MT1G/A/H/M/E, had $P=\bestP$. A single BH rejection would need $P\le\bhThresh$. Its evidence was positive in 7 of 8 discovery cohorts but negative in both sealed cohorts.
   \item Discovery $p$-values were consistent with uniform: \nBelow\ of \nModules\ fell below 0.05, and the Kolmogorov--Smirnov test against uniform gave $p=\ksP$ (Fig.~\ref{fig:real}a).
@@ -330,7 +354,7 @@ Correlation with response is therefore not what matters. Correlation with the re
 
 \section{Discussion}
 
-The method separates what small cohorts can supply from what they cannot. External data supply the dependence structure. Each cohort's nuisance parameters are eliminated exactly by conditioning. Validity then rests on containment, and the simulations show which violations of containment matter: those whose omitted direction is correlated with the outcome residual. Over-spanning repairs errors that lie in the factor span. It cannot repair omitted response-related edges.
+The method separates what small cohorts can supply from what they cannot. External data supply the dependence structure. Each cohort's nuisance parameters are eliminated exactly by conditioning. Validity then rests on containment, and the simulations show which violations of containment matter: those whose omitted direction is correlated with the outcome residual. Over-spanning repairs errors that lie in the factor span. It cannot repair omitted response-related edges, which inflated FDR up to \advNewDropHi\ in our adversarial simulations. Shared patients between cohorts also break the guarantee, which is why the duplicate screen is part of the method rather than a preprocessing detail.
 
 The real-data result is a null for the tested modules. It says that the analysis found no significant incremental conditional association among \nModules\ TCGA-derived modules beyond the T-effector score. It does not show that no other gene set carries such information.
 
@@ -380,7 +404,7 @@ Hence $T^2=\nu\,u^\top S^{-1}u$ is Hotelling's $T^2_{g,\nu}$, and $\frac{\nu-g+1
 
 Wilks' $\Lambda_W=\det S/\det(S+uu^\top)=1/(1+u^\top S^{-1}u)$. The conditional law does not depend on the conditioning values, so it also holds unconditionally. Replacing $X_G$ by a fixed projection $X_Ga$ gives the $g=1$ case, $t=\sqrt\nu\,u/\sqrt S\sim t_\nu$, with the sign carried by $u$. The law involves neither $\beta$ nor $\Sigma_c$, which is the sense in which the nuisance parameters are eliminated.
 
-\paragraph{Proof of Lemma~\ref{lem:pc}.} Fix $s$. Under $H^{r/K}_G$ at least $m$ cohorts are null. In those, $z_k\sim N(0,1)$ exactly (by Proposition~\ref{prop:exact}, applied with $\Phi^{-1}\circ F_t$), so their one-sided $p$-values are independent and uniform, given the external structure. By pigeonhole, the $j$-th largest of all $K$ $p$-values is at least the $j$-th largest of the null ones, for $j=1,\dots,m$. The $m$ largest of $m_0\ge m$ independent uniforms are stochastically no smaller than $m$ sorted independent uniforms. The Stouffer $p$-value is non-decreasing in each argument, so it is super-uniform. The factor 2 is a Bonferroni correction over $s$ \citep{benjamini2008pc}.
+\paragraph{Proof of Lemma~\ref{lem:pc}.} Fix $s$. Under $H^{r/K}_G$ at least $m$ cohorts are null. In those, $z_k\sim N(0,1)$ exactly (by Proposition~\ref{prop:exact}, applied with $\Phi^{-1}\circ F_t$), so their one-sided $p$-values are independent and uniform, given the external structure. By pigeonhole, the $j$-th largest of all $K$ $p$-values is at least the $j$-th largest of the null ones, for $j=1,\dots,m$. The $m$ largest of $m_0\ge m$ independent uniforms are stochastically no smaller than $m$ sorted independent uniforms. The Stouffer $p$-value is non-decreasing in each argument, so it is super-uniform. The factor 2 is a Bonferroni correction over $s$ \citep{benjamini2008pc}. If $G$ is untested in some cohorts, condition on the set of tested cohorts. It is a function of $X$ only, so under the null the $z_k$ of the tested null cohorts remain independent $N(0,1)$, and the argument applies with $K$ replaced by the number of tested cohorts.
 
 \paragraph{Proof sketch of Proposition~\ref{prop:bias}.} Write $X_G=D_G\beta+U\gamma+\mathcal E$ with $g=1$. Then
 \[
