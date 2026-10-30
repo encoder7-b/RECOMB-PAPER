@@ -19,8 +19,9 @@ The method answers this in three steps:
 | `icko/external.py` | External structure: factors, neighbourhood-lasso graph, W = [ΩΛ, Λ] over-spanning |
 | `tests/test_exactness.py` | Agreement with statsmodels (t-test / MANOVA Wilks); Monte Carlo exactness under the conditional null |
 | `sim/` | Simulations: G0 (knockoff gate, negative), G0′ (oracle), G1 (external structure and stress tests), G2 (baselines), G3 (factor-space misspecification) |
-| `data/` | Download (`fetch.py`, `fetch_cbio.py`), label-blind preparation (`prepare.py`), duplicate-patient screen (`dedup_check.py`) |
+| `data/` | Download (`fetch.py`, `fetch_cbio.py`), label-blind preparation (`prepare.py`), duplicate-patient screens between cohorts (`dedup_check.py`) and against the TCGA reference (`tcga_overlap_check.py`) |
 | `analysis/run_real.py` | The pre-registered real-data analysis. It refuses to read labels unless `docs/PROTOCOL.md` is committed and the label hashes match. |
+| `analysis/sensitivity_feasible.py`, `analysis/sensitivity_tcga_overlap.py` | Sensitivity analyses: untested cohorts dropped; TCGA-flagged patient removed |
 | `analysis/perm_null.py` | Real-data permutation null (response permuted within batch strata) |
 | `analysis/exploratory_incremental.py` | Exploratory, post-unsealing incremental-prediction analysis |
 | `docs/PROTOCOL.md` | Pre-registration: every fixed choice, plus SHA-256 hashes of the sealed labels |

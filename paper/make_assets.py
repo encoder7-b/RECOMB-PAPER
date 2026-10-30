@@ -251,7 +251,7 @@ def tables_v2():
     open(f"{TAB}/tab_exactness.tex", "w").write("\n".join(L) + "\n")
 
     L = [r"\begin{tabular}{rcccc}", r"\toprule",
-         r"$n$ & $k$ & FDR, $r{=}1$ & FDR, $r{=}2$ & feasible tests: reject @0.05 \\", r"\midrule"]
+         r"$n$ & $d$ & FDR, $r{=}1$ & FDR, $r{=}2$ & feasible tests: reject @0.05 \\", r"\midrule"]
     fc = json.load(open(f"{RES}/feasible_calib.json")) if os.path.exists(f"{RES}/feasible_calib.json") else {}
     ci_path = f"{RES}/g1_null2000_ci.csv"
     if os.path.exists(f"{RES}/g1_null2000_n25.csv"):  # raw replicate files present: (re)compute intervals

@@ -51,8 +51,8 @@ def wilks_pvalue(xg, d, r, signed=False):
     e = _resid(xg, d)
     rr = _resid(r[:, None], d)[:, 0]
     rss = rr @ rr
-    if rss < 1e-12:
-        return 1.0
+    if rss < 1e-12:  # r in span of design: test undefined; z = 0 / p = 1 (both mean "no evidence")
+        return 0.0 if signed else 1.0
     b = rr @ e / rss
     s_full = e.T @ e - rss * np.outer(b, b)
     if np.linalg.eigvalsh(s_full).min() <= 1e-10 * max(1.0, np.trace(e.T @ e)):

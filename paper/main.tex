@@ -29,7 +29,7 @@
 \begin{@twocolumnfalse}
 \maketitle
 \begin{abstract}
-\noindent Public immune-checkpoint-inhibitor (ICI) cohorts provide tumour transcriptomes for only 25--300 patients each. That is too few to estimate the gene--gene dependence that conditional inference requires, and response is often confounded with batch structure. Consequently, transcriptomic predictors of response rarely replicate. We present a framework that learns dependence structure (a sparse gene graph and latent-factor directions) once from large unlabelled external data, and eliminates all cohort-specific parameters by conditioning rather than estimation. The resulting gene-module test is exact in finite samples for any outcome distribution whenever the external structure contains the cohort's true structure. Evidence is combined across cohorts by a direction-consistent partial-conjunction procedure with false discovery rate (FDR) control. We show that misspecified structure induces an omitted-variable bias whose effect on FDR grows with sample size, and that over-spanning the external factor space removes it when the error lies in the factor span, though not when response-related dependence is missing from the graph. In simulations the test is calibrated in every setting and costs little power relative to an oracle, whereas marginal module tests and label-aware batch correction inflate FDR up to 2.8- and 4.5-fold. Under adversarial factor-span misspecification, over-spanning restores FDR to \advNewNoDropLo--\advNewNoDropHi. In a pre-registered, hash-sealed analysis of \nICI\ patients across ten ICI cohorts, no tested module carried detectable response information beyond the established T-effector/IFN-$\gamma$ signature, and discovery $p$-values were consistent with the global null. These results provide a leakage-free procedure for conditional biomarker discovery in small cohorts.
+\noindent Public immune-checkpoint-inhibitor (ICI) cohorts provide tumour transcriptomes for only 25--300 patients each. That is too few to estimate the gene--gene dependence that conditional inference requires, and response is often confounded with batch structure. Consequently, transcriptomic predictors of response rarely replicate. We present a framework that learns dependence structure (a sparse gene graph and latent-factor directions) once from large unlabelled external data, and eliminates all cohort-specific parameters by conditioning rather than estimation. The resulting gene-module test is exact in finite samples for any outcome distribution whenever the external structure contains the cohort's true structure. Evidence is combined across cohorts by a direction-consistent partial-conjunction test that is valid whenever the cohort-level tests are exact, and across modules by false discovery rate (FDR) procedures. We show that misspecified structure induces an omitted-variable bias whose effect on FDR grows with sample size, and that over-spanning the external factor space removes it when the error lies in the factor span, though not when response-related dependence is missing from the graph. In simulations the test is calibrated in every setting and costs little power relative to an oracle, whereas marginal module tests and label-aware batch correction inflate FDR up to 2.8- and 4.5-fold. Under adversarial factor-span misspecification, over-spanning restores FDR to \advNewNoDropLo--\advNewNoDropHi. In a pre-registered, hash-sealed analysis of \nICI\ patients across ten ICI cohorts, no tested module carried detectable response information beyond the established T-effector/IFN-$\gamma$ signature, and discovery $p$-values were consistent with the global null. These results provide a leakage-free procedure for conditional biomarker discovery in small cohorts.
 
 \medskip\noindent\textbf{Keywords:} conditional independence testing; false discovery rate control; immune checkpoint inhibitors; transcriptomic biomarkers; replicability; partial conjunction testing; external data integration; Gaussian graphical models; batch effects; pre-registration.
 
@@ -95,7 +95,7 @@ Given the batch labels, the rows $(X_i,Y_i)$ are independent and identically dis
 \end{assumption}
 
 \begin{assumption}[Factor-plus-graph Gaussian model]\label{as:gauss}
-$X_i\mid b_i\sim N(\mu_{b_i},\Sigma)$ with $\Sigma=\Lambda\Lambda^\top+\Omega^{-1}$, where $\Lambda\in\mathbb R^{p\times k}$, $\Omega\succ0$, and $\Omega_{jl}\neq0$ only on the edges of a graph $\mathcal E$. Batch shifts only the mean.
+$X_i\mid b_i\sim N(\mu_{b_i},\Sigma)$ with $\Sigma=\Lambda\Lambda^\top+\Omega^{-1}$, where $\Lambda\in\mathbb R^{p\times d}$, $\Omega\succ0$, and $\Omega_{jl}\neq0$ only on the edges of a graph $\mathcal E$. Batch shifts only the mean.
 \end{assumption}
 
 \begin{assumption}[Containment]\label{as:contain}
@@ -106,31 +106,31 @@ The external structure $(\hat{\mathcal E},\hat W)$ is independent of the cohort 
 \end{itemize}
 \end{assumption}
 
-The design for $G$ is $D_G=[\,\mathbf 1,\ \text{batch dummies},\ X_{\hat N(G)},\ X_{-G}\hat W_{-G}\,]$, with rank $q$. The residual $r$ is any function of $(Y,X_{-G},b)$. We use $Y$ minus its least-squares fit on batch and the mean of $B$.
+The design for $G$ is $D_G=[\,\mathbf 1,\ \text{batch dummies},\ X_{\hat N(G)},\ X_{-G}\hat W_{-G}\,]$, with rank $q$. The residual $\eta$ is any function of $(Y,X_{-G},b)$. We use $Y$ minus its least-squares fit on batch and the mean of $B$. Nothing used to build $D_G$, $\eta$, a projection of $X_G$, or a rule for skipping a test may depend on $X_G$.
 
 \subsection{The exact test}
 
-Let $\tilde X_G$ and $\tilde r$ be the residuals of $X_G$ and $r$ after projection onto the columns of $D_G$. Define
+Let $\tilde X_G$ and $\tilde\eta$ be the residuals of $X_G$ and $\eta$ after projection onto the columns of $D_G$. Define
 \[
-u=\tilde X_G^\top\tilde r/\|\tilde r\|, \qquad S=\tilde X_G^\top\tilde X_G-uu^\top .
+u=\tilde X_G^\top\tilde\eta/\|\tilde\eta\|, \qquad S=\tilde X_G^\top\tilde X_G-uu^\top .
 \]
-Wilks' statistic for adding $r$ to the regression of $X_G$ on $D_G$ is $\Lambda_W=1/(1+u^\top S^{-1}u)$.
+Wilks' statistic for adding $\eta$ to the regression of $X_G$ on $D_G$ is $1/(1+u^\top S^{-1}u)$. The test is undefined when $\tilde\eta=0$ (for example, constant $Y$); that event is a function of the conditioning variables, so skipping it is harmless.
 
 \begin{proposition}[Exactness]\label{prop:exact}
-Suppose Assumptions~\ref{as:iid}--\ref{as:contain} and $H_{G,k}$ hold, $g=|G|$, and $n-q-1\ge g$. Then, conditionally on $(X_{-G},Y,b)$, and therefore also unconditionally,
+Suppose Assumptions~\ref{as:iid}--\ref{as:contain} and $H_{G,k}$ hold, $g=|G|$, $\tilde\eta\neq0$ and $n-q-1\ge g$. Then, conditionally on $(X_{-G},Y,b)$,
 \[
 F=\frac{n-q-g}{g}\,u^\top S^{-1}u\ \sim\ F_{g,\,n-q-g}.
 \]
-This holds for every conditional law of $Y$, and the law does not depend on $\mu$, $\Sigma$ or the batch effects. For $g=1$, or for any fixed projection $X_Ga$, it reduces to an exact $t$-test with $n-q-1$ degrees of freedom, whose sign is used.
+Because $q=\operatorname{rank}(D_G)$ is itself a function of the conditioning variables, the $p$-value $\bar F_{g,n-q-g}(F)$ is exactly uniform, conditionally and therefore unconditionally. This holds for every conditional law of $Y$, and it does not depend on $\mu$, $\Sigma$ or the batch effects. For $g=1$, or for any fixed projection $X_Ga$, it reduces to an exact $t$-test with $n-q-1$ degrees of freedom, whose sign is used.
 \end{proposition}
 
 The proof is in Appendix~\ref{app:proofs}. Its three steps:
 \begin{enumerate}
-  \item By the Woodbury identity, $E[X_G\mid X_{-G},b]$ is linear in the neighbours $X_{N(G)}$ and in the $k$ combinations $X_{-G}(\Omega\Lambda)_{-G}$, with constant conditional covariance. Under containment this is $D_G\beta$.
-  \item Under $H_{G,k}$ with independent rows, conditioning additionally on $Y$ leaves this law unchanged, so $D_G$ and $r$ can be treated as fixed.
+  \item By the Woodbury identity, $E[X_G\mid X_{-G},b]$ is linear in the neighbours $X_{N(G)}$ and in the $d$ combinations $X_{-G}(\Omega\Lambda)_{-G}$, with constant conditional covariance. Under containment this is $D_G\beta$.
+  \item Under $H_{G,k}$ with independent rows, conditioning additionally on $Y$ leaves this law unchanged, so $D_G$ and $\eta$ can be treated as fixed.
   \item With a single added regressor, $u\sim N_g(0,\Sigma_c)$ is independent of $S\sim\mathrm{Wishart}_g(n-q-1,\Sigma_c)$. So $(n-q-1)u^\top S^{-1}u$ is Hotelling's $T^2$, which is exactly $F$-distributed for any $g$.
 \end{enumerate}
-Gene scales are fixed from external data, so the per-cohort design never uses cohort statistics of $X_G$.
+Only the conditional law of $X_G$ given $(X_{-G},b)$ is used, so sampling that depends on $Y$ (for example, case--control selection by response) does not affect validity. Genes are scaled by fixed external standard deviations $D$. This changes nothing: $\Omega'=D\Omega D$ has the same support and $W'=DW$, so containment is simply read in the scaled coordinates. Scaling by cohort standard deviations would break exactness, because they depend on $X_G$. Containment is sufficient but not necessary: the proof needs only the $g$ columns of $W_{-G}MW_G^\top$ (Appendix~\ref{app:proofs}) to lie in $\operatorname{colspan}(\hat W_{-G})$.
 
 \paragraph{Verification.} Our implementation agrees with independent implementations (statsmodels OLS for $g=1$, and multivariate OLS/MANOVA Wilks for $g=5$) to within \agreeMax\ in $|\log p|$. A numerical audit of Lemma~A1 over 200 random sparse-plus-factor models confirms that the true conditional-mean coefficients lie in the span of the true neighbours and $\Omega\Lambda$, and in any span containing $\Omega\Lambda$, to within $10^{-13}$. Dropping a single neighbour or factor direction breaks this. Under the conditional null, with a binary $Y$ that depends nonlinearly on genes outside $D_G$ and $20{,}000$ replicates per setting, rejection rates match nominal levels for $n$ from 15 to 100 and $g$ from 1 to 10 (Table~\ref{tab:exact}).
 
@@ -146,11 +146,11 @@ Gene scales are fixed from external data, so the per-cohort design never uses co
 The external structure is learned from unlabelled expression of the matched tumour types (TCGA; \citealp{tcga2013pancan}):
 \begin{itemize}
   \item standardise each gene;
-  \item estimate $k$ principal factors $\hat\Lambda$;
+  \item estimate $d$ principal factors $\hat\Lambda$;
   \item fit a neighbourhood-lasso graph to the factor residuals \citep{meinshausen2006}, take its union with each gene's top correlation partners, and cap the degree at 3;
   \item estimate $\hat\Omega$ on that graph.
 \end{itemize}
-Assumption~\ref{as:contain} needs containment, not recovery, so we inflate both parts. For the graph we take the union with correlation partners. For the factor span we use $\hat W=[\hat\Omega\hat\Lambda,\ \hat\Lambda]$ with over-specified $k=\mathrm{clip}(\lfloor n/25\rfloor,2,8)$ (\emph{over-spanning}). Each column costs one degree of freedom, and a module is skipped in a cohort if fewer than 8 remain.
+Assumption~\ref{as:contain} needs containment, not recovery, so we inflate both parts. For the graph we take the union with correlation partners. For the factor span we use $\hat W=[\hat\Omega\hat\Lambda,\ \hat\Lambda]$ with over-specified $d=\mathrm{clip}(\lfloor n/25\rfloor,2,8)$ (\emph{over-spanning}). Each column costs one degree of freedom, and a module is skipped in a cohort if fewer than 8 remain.
 
 \begin{remark}
 Over-spanning makes containment of the factor span more likely, but it does not guarantee it. It cannot repair an omitted graph edge. Section~\ref{sec:sims} separates these cases.
@@ -159,35 +159,36 @@ Over-spanning makes containment of the factor span more likely, but it does not 
 \subsection{Combining cohorts and modules}
 
 \begin{lemma}[Partial conjunction]\label{lem:pc}
-Suppose the cohorts are independent given the external structure, and let $H^{r/K}_G$ state that $G$ is non-null in fewer than $r$ of the $K$ cohorts in which $G$ is tested. For each sign $s\in\{\pm1\}$, let $p^{(s)}_{(1)}\le\dots\le p^{(s)}_{(K)}$ be the ordered exact one-sided $p$-values $1-\Phi(sz_k)$, and let $m=K-r+1$. Then
+Suppose the cohorts are independent given the external structure, that in each cohort the decision to test $G$ is a function of $(X_{-G},Y,b)$, and let $H^{r/K}_G$ state that $G$ is non-null in fewer than $r$ of the $K$ cohorts in which $G$ is tested. For each sign $s\in\{\pm1\}$, let $p^{(s)}_{(1)}\le\dots\le p^{(s)}_{(K)}$ be the ordered exact one-sided $p$-values $1-\Phi(sz_k)$, and let $m=K-r+1$. Then
 \[
 P^{r/K}_G=\min\Bigl\{1,\,2\min_s\bar\Phi\Bigl(\textstyle\sum_{i\ge r}\Phi^{-1}\bigl(1-p^{(s)}_{(i)}\bigr)/\sqrt m\Bigr)\Bigr\}
 \]
-satisfies $\Pr(P^{r/K}_G\le t)\le t$ under $H^{r/K}_G$.
+satisfies $\Pr(P^{r/K}_G\le t)\le t$ under $H^{r/K}_G$, conditionally on the set of tested cohorts. If $K<r$, we set $P^{r/K}_G=1$.
 \end{lemma}
 
 The idea is that at least $m$ cohorts are null and each $z_k$ is exactly $N(0,1)$ there. The $m$ largest $p$-values dominate a sorted set of $m$ independent uniforms, and the Stouffer combination is monotone (Appendix~\ref{app:proofs}; \citealp{benjamini2008pc}).
 
-Across modules we apply BH \citep{benjamini1995}. BH is guaranteed only when the null $p$-values are positively dependent (PRDS), which we cannot prove here, because modules share the residual $r$ and overlap in their designs. We therefore also report Benjamini--Yekutieli (BY), which is valid under arbitrary dependence. Cohort independence is a correctness requirement, which we enforce with a calibrated duplicate-patient screen (Section~\ref{sec:data}).
+Across modules the pre-registered procedure is BH \citep{benjamini1995}. BH is guaranteed only when the null $p$-values are positively dependent (PRDS). No PRDS argument is available here: modules share the residual $\eta$, their designs overlap, one module's genes sit inside another's $X_{-G}$, and the order statistic and sign correction are layered on top. BH therefore has no FDR guarantee in this setting. Benjamini--Yekutieli (BY) is valid under arbitrary dependence, and we report it alongside. BY rejects a subset of what BH rejects. Cohort independence is a correctness requirement, which we enforce with a calibrated duplicate-patient screen (Section~\ref{sec:data}).
 
-\paragraph{Untested cohorts.} A module may be untestable in a cohort because too few degrees of freedom remain. Testability depends only on expression, never on $Y$. So dropping that cohort from the module's combination (using the $K$ cohorts in which it is tested) keeps Lemma~\ref{lem:pc} valid by conditioning. The pre-registered rule instead set its $z$ to 0, a fixed $p=1/2$ that the lemma does not cover. We report both rules, and they agree (Section~\ref{sec:data}).
+\paragraph{Untested cohorts.} A module may be untestable in a cohort because too few degrees of freedom remain. This depends only on $q$, a function of $X_{-G}$, so dropping that cohort from the module's combination keeps Lemma~\ref{lem:pc} valid. The implementation has two further skip rules: a module is skipped if most of its genes are constant in the cohort, and the test returns no value if $S$ is numerically singular. Both use $X_G$, so the lemma as stated does not cover them. Under Assumption~\ref{as:gauss} both events have probability zero, so they do not affect validity under the model. The pre-registered rule set an untested cohort's $z$ to 0. For $r=1$, the primary analysis, this is provably conservative: under the global null the combined statistic is $N(0,K_t/K)$, where $K_t$ is the number of tested cohorts. For $r\ge2$ it is unproven, though conservative in our simulation checks. We report both rules, and they agree (Section~\ref{sec:data}).
 
 \subsection{Misspecification}
 
-\begin{proposition}[Omitted-direction bias]\label{prop:bias}
-Suppose $E[X_G\mid X_{-G},b]=D_G\beta+U\gamma$, where $U=X_{-G}c\notin\operatorname{colspan}(D_G)$. This happens when a true edge is missing from $\hat{\mathcal E}$ or when Assumption~\ref{as:contain} fails for $\hat W$. Then under $H_{G,k}$ the $t$-statistic for $r$ (with $g=1$) has non-centrality
+\begin{proposition}[Omitted-direction bias; informal]\label{prop:bias}
+Suppose $E[X_G\mid X_{-G},b]=D_G\beta+U\gamma$, where $U=X_{-G}c\notin\operatorname{colspan}(D_G)$. This happens when a true edge is missing from $\hat{\mathcal E}$ or when Assumption~\ref{as:contain} fails for $\hat W$. Take $g=1$, with $\gamma$ and $q$ fixed as $n$ grows, and assume the sample moments converge. Write $\kappa=\mathrm{Cov}(\eta,U\mid D_G)/\mathrm{sd}(\eta\mid D_G)$ and $\tau^2=\mathrm{Var}(U\mid D_G,\eta)$. Then under $H_{G,k}$ the $t$-statistic for $\eta$ satisfies $t=\delta_n+O_p(1)$, with
 \[
-\delta_n=\sqrt n\,\gamma\,\frac{\mathrm{Cov}(r,U\mid D_G)}{\sigma_c\,\mathrm{sd}(r\mid D_G)}+o_p(\sqrt n).
+\delta_n=\frac{\sqrt n\,\gamma\,\kappa}{\sqrt{\sigma_c^2+\gamma^2\tau^2}} .
 \]
 \end{proposition}
 
-The bias is non-zero only when the omitted direction is correlated with the outcome \emph{residual} $r$. Being correlated with response is not enough. When it is correlated with $r$, the type-I error tends to 1 as $n$ grows. The derivation is in Appendix~\ref{app:proofs}.
+The shift is non-zero only when the omitted direction is correlated with the outcome \emph{residual} $\eta$ ($\kappa\neq0$). Being correlated with response is not enough. When $\kappa\neq0$, the type-I error tends to 1 as $n$ grows. In a check with $\gamma=\sigma_c=1$, $\mathrm{corr}(\eta,U)=0.3$ and $n=400$, the mean simulated $t$ was 4.31, against $\delta_n=4.34$. The external structure is shared by every cohort of a tumour type, so an omitted edge biases those cohorts in the same direction, and replication across cohorts does not protect against it. The derivation is in Appendix~\ref{app:proofs}.
 
 \paragraph{Scope of the guarantee.} Proposition~\ref{prop:exact} is exact only under Assumptions~\ref{as:iid}--\ref{as:contain}, and outside them we claim no guarantee.
 \begin{itemize}
-  \item An omitted direction correlated with $r$ drives the type-I error to 1 (Proposition~\ref{prop:bias}). In adversarial simulations, missing response-related edges inflate FDR up to \advNewDropHi.
+  \item An omitted direction correlated with $\eta$ drives the type-I error to 1 (Proposition~\ref{prop:bias}). In adversarial simulations, missing response-related edges inflate FDR up to \advNewDropHi.
   \item Over-spanning repairs factor-span errors only.
   \item Patients shared between cohorts violate Lemma~\ref{lem:pc} (Section~\ref{sec:sims}).
+  \item If batch changes variances or loadings rather than only the mean, the conditional coefficients differ by batch and exactness fails.
 \end{itemize}
 
 \subsection{Pre-registration}
@@ -254,7 +255,7 @@ Signal is \emph{sparse} (2 genes per module, random signs) or \emph{coherent} (a
 \label{fig:baselines}
 \end{figure*}
 
-\paragraph{Factor-span misspecification.} With the graph held at the truth, we varied the factor span directly (Table~\ref{tab:factor}). For each omitted factor we also measured $|\rho|$, the correlation between the omitted direction and $r$ given $D_G$ (the driver in Proposition~\ref{prop:bias}). For two independent vectors of length 300 the noise level is about 0.046.
+\paragraph{Factor-span misspecification.} With the graph held at the truth, we varied the factor span directly (Table~\ref{tab:factor}). For each omitted factor we also measured $|\rho|$, the correlation between the omitted direction and $\eta$ given $D_G$ (the driver in Proposition~\ref{prop:bias}). For two independent vectors of length 300 the noise level is about 0.046.
 \begin{itemize}
   \item FDR stayed at or below nominal for the true span and for a span containing it.
   \item It also stayed nominal when we omitted $F_1$ (immune) or $F_2$, whose $|\rho|$ was at or below the noise level. $F_1$ is strongly linked to response, but that link is absorbed by the marker adjustment in $r$.
@@ -264,14 +265,14 @@ Correlation with response is therefore not what matters. Correlation with the re
 
 \begin{table}[t]
 \centering\footnotesize
-\caption{FDR ($r=1$, AUC 0.8) by factor span, with the oracle graph (300 replicates, Monte Carlo SE $\le$0.013). $|\rho|$: measured correlation between the omitted direction and $r$ given $D_G$, for sparse/coherent signal.}
+\caption{FDR ($r=1$, AUC 0.8) by factor span, with the oracle graph (300 replicates, Monte Carlo SE $\le$0.013). $|\rho|$: measured correlation between the omitted direction and $\eta$ given $D_G$, for sparse/coherent signal.}
 \label{tab:factor}
 \resizebox{\columnwidth}{!}{\input{tables/tab_factor_misspec}}
 \end{table}
 
 \paragraph{Graph misspecification under adversarial edges.} We added 40 true edges joining signal genes to genes in null modules (partial correlation 0.25), then deleted a fraction of them from the learned graph (Fig.~\ref{fig:adversarial}).
 \begin{itemize}
-  \item With the default span ($k=4$, $\hat W=\hat\Omega\hat\Lambda$), FDR reached \advOldNoDropHi\ at $n=300$ even with nothing deleted, because $\hat W$ was estimated with error. With oracle structure it was 0.10.
+  \item With the default span ($d=4$, $\hat W=\hat\Omega\hat\Lambda$), FDR reached \advOldNoDropHi\ at $n=300$ even with nothing deleted, because $\hat W$ was estimated with error. With oracle structure it was 0.10.
   \item Over-spanning restored FDR to \advNewNoDropLo--\advNewNoDropHi\ with nothing deleted. Power was unchanged at $n=300$ and lower at $n=100$ (0.12 against 0.20).
   \item Deleting true response-related edges still inflates FDR, up to \advNewDropHi. Over-spanning cannot repair that.
   \item Random missing edges, which rarely touch response-relevant genes, left calibration unchanged.
@@ -308,7 +309,7 @@ This is why the duplicate screen is part of the method.
   \item \textbf{Modules:} the fixed recipe produced \nModules\ modules covering about 400 of the 1500 genes.
 \end{itemize}
 
-\textbf{Duplicate screen.} Each gene is ranked within its cohort, five principal components are removed, and samples are correlated across cohorts. We calibrated this on a positive control: Hugo from GEO against the iAtlas re-processing, the same 26 patients through different pipelines. True pairs scored $\rho\ge0.67$, non-pairs $\le0.27$, and impossible NSCLC--ccRCC pairs $\le0.28$. Ten pairs crossed the threshold of 0.5. None was plausible as a shared patient, and all 14 samples involved were excluded.
+\textbf{Duplicate screen.} Each gene is ranked within its cohort, five principal components are removed, and samples are correlated across cohorts. We calibrated this on a positive control: Hugo from GEO against the iAtlas re-processing, the same 26 patients through different pipelines. True pairs scored $\rho\ge0.67$, non-pairs $\le0.27$, and impossible NSCLC--ccRCC pairs $\le0.28$. Ten pairs crossed the threshold of 0.5. None was plausible as a shared patient, and all 14 samples involved were excluded. Assumption~\ref{as:contain} also needs the TCGA reference to share no patients with the cohorts, so we ran the same screen of every cohort against every TCGA type. One pair crossed 0.5 (IMmotion150 against TCGA-KIRC, $\rho=0.50$), well below the true-pair range, and the TCGA sample also correlated at 0.34--0.40 with other IMmotion150 patients, which suggests shared tumour biology. Removing that patient also gave \nDiscovered\ discoveries.
 
 \paragraph{Design.} Eight cohorts (\nDisc\ patients) were used for discovery. IMvigor210 and Braun nivolumab (\nSeal\ patients) were sealed for replication. The sunitinib and everolimus arms (\nCtrl\ patients) were descriptive controls.
 
@@ -374,7 +375,7 @@ The real-data result is a null for the tested modules. It says that the analysis
 \onecolumn
 \section{Proofs}\label{app:proofs}
 
-\paragraph{Lemma A1 (conditional mean).} Write $W=\Omega\Lambda$ and $M=(I_k+\Lambda^\top\Omega\Lambda)^{-1}$. By the Woodbury identity, the precision is
+\paragraph{Lemma A1 (conditional mean).} Write $W=\Omega\Lambda$ and $M=(I_d+\Lambda^\top\Omega\Lambda)^{-1}$. By the Woodbury identity, the precision is
 \[
 \Theta=\Sigma^{-1}=\Omega-WMW^\top .
 \]
@@ -386,15 +387,15 @@ Now $\Theta_{G,-G}=\Omega_{G,-G}-W_GMW_{-G}^\top$, and the columns of $\Omega_{G
 \[
 -\Theta_{GG}^{-1}\Theta_{G,-G}x=x_{N(G)}A_1+(x^\top W_{-G})A_2
 \]
-for some matrices $A_1$ and $A_2$. The terms in $\mu$ are linear in the batch dummies. Under Assumption~\ref{as:contain}, $W=\hat WC$ for some matrix $C$. Deleting rows preserves this, so $W_{-G}=\hat W_{-G}C$, and $X_{N(G)}$ is a subset of the columns of $X_{\hat N(G)}$. Hence $E[X_G\mid X_{-G},b]=D_G\beta$, with constant covariance $\Sigma_c$ that does not depend on $b$.
+for some matrices $A_1$ and $A_2$. The terms in $\mu$ are linear in the batch dummies. Under Assumption~\ref{as:contain}, $W=\hat WC$ for some matrix $C$. Deleting rows preserves this, so $W_{-G}=\hat W_{-G}C$, and $X_{N(G)}$ is a subset of the columns of $X_{\hat N(G)}$. Hence $E[X_G\mid X_{-G},b]=D_G\beta$, with constant covariance $\Sigma_c$ that does not depend on $b$. Only the factor term $W_{-G}MW_G^\top\Sigma_c$ of the coefficient matrix uses $\hat W$, so it suffices that its $g$ columns lie in $\operatorname{colspan}(\hat W_{-G})$.
 
 \paragraph{Lemma A2 (conditioning on $Y$).} By Assumption~\ref{as:iid} the rows are independent given $b$. Under $H_{G,k}$, $Y_i\indep X_{iG}\mid(X_{i,-G},b_i)$. Therefore the joint conditional law of the rows $X_{iG}$ given $(X_{-G},Y,b)$ is the product of the laws given $(X_{i,-G},b_i)$, that is,
 \[
 X_G=D_G\beta+\mathcal E,
 \]
-where $\mathcal E$ has i.i.d.\ $N(0,\Sigma_c)$ rows independent of $(X_{-G},Y,b)$. Both $D_G$ and $r$ are functions of $(X_{-G},Y,b)$, so they are fixed under this conditioning. The residual $r$ may depend on $Y$ in any way.
+where $\mathcal E$ has i.i.d.\ $N(0,\Sigma_c)$ rows independent of $(X_{-G},Y,b)$. Both $D_G$ and $\eta$ are functions of $(X_{-G},Y,b)$, so they are fixed under this conditioning. The residual $\eta$ may depend on $Y$ in any way. Only Gaussianity of $X_G$ given $(X_{-G},b)$ was used.
 
-\paragraph{Lemma A3 (exact law for one added regressor).} Condition on $(X_{-G},Y,b)$ and assume $\tilde r\neq0$. Let $P$ be the projection onto $\operatorname{colspan}(D_G)$, let $v=\tilde r/\|\tilde r\|$ (a unit vector orthogonal to $\operatorname{colspan}(D_G)$), and let $Q=I-P-vv^\top$, a projection of rank $\nu=n-q-1$.
+\paragraph{Lemma A3 (exact law for one added regressor).} Condition on $(X_{-G},Y,b)$ and assume $\tilde\eta\neq0$. Let $P$ be the projection onto $\operatorname{colspan}(D_G)$, let $v=\tilde\eta/\|\tilde\eta\|$ (a unit vector orthogonal to $\operatorname{colspan}(D_G)$), and let $Q=I-P-vv^\top$, a projection of rank $\nu=n-q-1$.
 \begin{itemize}
   \item Since $(I-P)D_G=0$, we have $u=\tilde X_G^\top v=\mathcal E^\top v\sim N_g(0,\Sigma_c)$.
   \item Similarly $S=\mathcal E^\top Q\mathcal E\sim \mathrm{Wishart}_g(\nu,\Sigma_c)$.
@@ -402,15 +403,15 @@ where $\mathcal E$ has i.i.d.\ $N(0,\Sigma_c)$ rows independent of $(X_{-G},Y,b)
 \end{itemize}
 Hence $T^2=\nu\,u^\top S^{-1}u$ is Hotelling's $T^2_{g,\nu}$, and $\frac{\nu-g+1}{g\nu}T^2\sim F_{g,\nu-g+1}$ whenever $\nu\ge g$. Since $\nu-g+1=n-q-g$, this proves Proposition~\ref{prop:exact}.
 
-Wilks' $\Lambda_W=\det S/\det(S+uu^\top)=1/(1+u^\top S^{-1}u)$. The conditional law does not depend on the conditioning values, so it also holds unconditionally. Replacing $X_G$ by a fixed projection $X_Ga$ gives the $g=1$ case, $t=\sqrt\nu\,u/\sqrt S\sim t_\nu$, with the sign carried by $u$. The law involves neither $\beta$ nor $\Sigma_c$, which is the sense in which the nuisance parameters are eliminated.
+Wilks' statistic is $\det S/\det(S+uu^\top)=1/(1+u^\top S^{-1}u)$. The conditional law depends on the conditioning values only through $q$, so the $p$-value is exactly uniform conditionally, and hence unconditionally. Replacing $X_G$ by a fixed projection $X_Ga$ gives the $g=1$ case, $t=\sqrt\nu\,u/\sqrt S\sim t_\nu$, with the sign carried by $u$. The law involves neither $\beta$ nor $\Sigma_c$, which is the sense in which the nuisance parameters are eliminated.
 
-\paragraph{Proof of Lemma~\ref{lem:pc}.} Fix $s$. Under $H^{r/K}_G$ at least $m$ cohorts are null. In those, $z_k\sim N(0,1)$ exactly (by Proposition~\ref{prop:exact}, applied with $\Phi^{-1}\circ F_t$), so their one-sided $p$-values are independent and uniform, given the external structure. By pigeonhole, the $j$-th largest of all $K$ $p$-values is at least the $j$-th largest of the null ones, for $j=1,\dots,m$. The $m$ largest of $m_0\ge m$ independent uniforms are stochastically no smaller than $m$ sorted independent uniforms. The Stouffer $p$-value is non-decreasing in each argument, so it is super-uniform. The factor 2 is a Bonferroni correction over $s$ \citep{benjamini2008pc}. If $G$ is untested in some cohorts, condition on the set of tested cohorts. It is a function of $X$ only, so under the null the $z_k$ of the tested null cohorts remain independent $N(0,1)$, and the argument applies with $K$ replaced by the number of tested cohorts.
+\paragraph{Proof of Lemma~\ref{lem:pc}.} Fix $s$. Under $H^{r/K}_G$ at least $m$ cohorts are null. In those, $z_k\sim N(0,1)$ exactly (by Proposition~\ref{prop:exact}, applied with $\Phi^{-1}\circ F_t$), so their one-sided $p$-values are independent and uniform, given the external structure. By pigeonhole, the $j$-th largest of all $K$ $p$-values is at least the $j$-th largest of the null ones, for $j=1,\dots,m$. The $m$ largest of $m_0\ge m$ independent uniforms are stochastically no smaller than $m$ sorted independent uniforms. The Stouffer $p$-value is non-decreasing in each argument, so it is super-uniform. The factor 2 is a Bonferroni correction over $s$ \citep{benjamini2008pc}. The argument in fact holds pointwise: for any $m$ null cohorts, the $j$-th largest of all $K$ $p$-values is at least the $j$-th largest within that subset, and $m$ independent uniforms give an exactly $N(0,1)$ Stouffer sum. If $G$ is untested in some cohorts, condition on the set of tested cohorts. Each $z_k$ is exactly $N(0,1)$ conditionally on $(X_{-G},Y,b)$ of its cohort, so a selection rule that is a function of those variables leaves the tested null $z_k$ independent $N(0,1)$, and the argument applies with $K$ replaced by the number of tested cohorts. A rule that uses $X_G$ is not covered.
 
 \paragraph{Proof sketch of Proposition~\ref{prop:bias}.} Write $X_G=D_G\beta+U\gamma+\mathcal E$ with $g=1$. Then
 \[
-u=\tilde r^\top(\tilde U\gamma+\tilde{\mathcal E})/\|\tilde r\| .
+u=\tilde\eta^\top(\tilde U\gamma+\tilde{\mathcal E})/\|\tilde\eta\| .
 \]
-The term $\tilde r^\top\tilde{\mathcal E}/\|\tilde r\|\sim N(0,\sigma_c^2)$ as before. The term $\tilde r^\top\tilde U\gamma/\|\tilde r\|=\sqrt n\,\gamma\,\widehat{\mathrm{Cov}}(r,U\mid D)/\widehat{\mathrm{sd}}(r\mid D)$, and the sample moments converge. Meanwhile $S/\nu\to\sigma_c^2+\gamma^2\mathrm{Var}(U\mid D,r)$, which is bounded. Dividing gives the stated non-centrality. It is non-zero only if $U$ is correlated with $r$ given $D_G$.
+The term $\tilde\eta^\top\tilde{\mathcal E}/\|\tilde\eta\|\sim N(0,\sigma_c^2)$ as before. The term $\tilde\eta^\top\tilde U\gamma/\|\tilde\eta\|=\sqrt n\,\gamma\,\hat\kappa$, with $\hat\kappa=\widehat{\mathrm{Cov}}(\eta,U\mid D)/\widehat{\mathrm{sd}}(\eta\mid D)\to\kappa$. The residual sum $S=\tilde X_G^\top Q\tilde X_G$ contains $U$ residualised on $(D_G,\eta)$, so $S/\nu\to\sigma_c^2+\gamma^2\tau^2$. Hence $t=\sqrt\nu\,u/\sqrt S=\sqrt n\,\gamma\kappa/\sqrt{\sigma_c^2+\gamma^2\tau^2}+O_p(1)$, using $\nu/n\to1$. Strictly, $t$ is a doubly non-central $t$ variable; the statement only describes its centring.
 
 \section{Additional material}
 Full simulation grids, the knockoff negative result (G0), the duplicate-screen calibration, per-cohort permutation rates and the protocol are in the repository (\texttt{results/}, \texttt{docs/}).
